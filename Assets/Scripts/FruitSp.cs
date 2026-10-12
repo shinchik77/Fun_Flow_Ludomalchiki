@@ -22,6 +22,14 @@ public class FruitSp : MonoBehaviour
 
     public float maxLifetime = 5f;
 
+    [Header("Рост сложности")]
+    public float difficultyInterval = 10f;   // Каждые 10 секунд усложняем
+    public float difficultyStep = 0.1f;      // Насколько уменьшаем задержку
+    public float minSpawnDelayLimit = 0.1f;  // Минимум задержки
+    public float forceIncrease = 0.5f;       // Насколько увеличиваем силу
+
+    private float difficultyTimer;
+
     private void Awake()
     {
         spawnArea = GetComponent<Collider>();
@@ -43,11 +51,22 @@ public class FruitSp : MonoBehaviour
 
         while (enabled)
         {
+            // === Рост сложности ===
+            difficultyTimer += Time.deltaTime;
+            if (difficultyTimer >= difficultyInterval)
+            {
+                minSpawnDelay = Mathf.Max(minSpawnDelayLimit, minSpawnDelay - difficultyStep);
+                maxSpawnDelay = Mathf.Max(minSpawnDelayLimit * 2f, maxSpawnDelay - difficultyStep);
+                minForce += forceIncrease;
+                maxForce += forceIncrease;
+                difficultyTimer = 0;
+                Debug.Log("Сложность выросла! Задержка: " + minSpawnDelay + " - " + maxSpawnDelay);
+            }
+
             GameObject prefab = fruitPrefabs[Random.Range(0, fruitPrefabs.Length)];
 
-            if (Random.value < bombChance) {
+            if (Random.value < bombChance)
                 prefab = bombPrefab;
-            }//лиза посмотри как сделать так чтобы когда бомбу взрывали все отстанавливалось
 
             Vector3 position = new Vector3
             {
@@ -67,5 +86,4 @@ public class FruitSp : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(minSpawnDelay, maxSpawnDelay));
         }
     }
-
 }
